@@ -9,113 +9,419 @@
   </head>
 
   <body class="bg-gray-50">
-    <div class="flex h-screen bg-gray-50">
-      <!-- Main Content -->
-      <div class="flex-1 flex flex-col">
-        <!-- Header -->
-        <div class="bg-white border-b border-gray-200 p-4 shadow-sm">
-          <h1 class="text-2xl font-bold text-gray-800">KasirPro 58mm</h1>
-          <p class="text-sm text-gray-500">Sistem Kasir Thermal Printer</p>
-        </div>
+    <div class="flex flex-col h-screen">
+      <!-- TOP NAVIGATION BAR -->
+      <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="flex items-center justify-between px-6 py-3">
+          <!-- Left: Logo -->
+          <div class="flex items-center gap-2">
+            <div class="font-bold text-lg text-gray-900">COOL KIDS CELL</div>
+            <span class="text-xs text-gray-500">Cross-Platform POS • Linux & Android</span>
+          </div>
 
-        <!-- Products & Categories -->
-        <div class="flex-1 overflow-y-auto p-4">
-          <!-- Categories -->
-          <div class="mb-6">
-            <div class="flex gap-2 overflow-x-auto pb-4">
-              <button class="category-btn active px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-medium whitespace-nowrap" data-category="all">
-                Semua
+          <!-- Center: Menu Tabs -->
+          <div class="flex gap-1">
+            <button class="nav-tab px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-full transition" data-view="pos">Kasir (POS)</button>
+            <button class="nav-tab px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition" data-view="inventory">Produk & Stok</button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Riwayat</button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Pembukuan</button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Analytics</button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">StrukScan OCR</button>
+            <button onclick="openProductListModal()" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition">Uji Printer 58mm</button>
+          </div>
+
+          <!-- Right: Status Indicators -->
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-sm">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span class="text-gray-600">Server OK</span>
+            </div>
+            <div id="account-menu-container" class="relative">
+              <button id="account-menu-button" type="button" aria-expanded="false" aria-controls="account-menu" class="flex items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <span id="cashier-avatar" class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">--</span>
+                <span class="leading-tight">
+                  <span id="active-cashier" class="block text-xs font-semibold text-gray-800">Kasir belum login</span>
+                  <span class="block text-[11px] text-gray-500">Akun & pengaturan</span>
+                </span>
+                <span aria-hidden="true" class="text-xs text-gray-500">▾</span>
               </button>
-              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Minuman">
-                Minuman
-              </button>
-              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Makanan">
-                Makanan
-              </button>
-              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Snack">
-                Snack
-              </button>
+              <div id="account-menu" class="absolute right-0 top-full z-40 mt-2 hidden w-64 rounded border border-gray-200 bg-white py-2 shadow-xl">
+                <p class="px-4 pb-2 text-[11px] font-semibold uppercase text-gray-400">Kelola Toko</p>
+                <button type="button" data-account-action="account" class="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50">Akun & Integrasi</button>
+                <button type="button" data-account-action="settings" class="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50">Pengaturan Toko</button>
+                <button type="button" data-account-action="backup" class="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50">Backup & Impor Data</button>
+                <button type="button" data-account-action="staff" class="block w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50">Kelola Staf toko</button>
+                <div class="my-2 border-t border-gray-100"></div>
+                <button id="lock-session-btn" type="button" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50">Kunci Sesi</button>
+                <p id="account-menu-message" class="hidden px-4 pt-2 text-xs text-gray-500" aria-live="polite"></p>
+              </div>
+            </div>
+            <span class="text-xs font-medium text-gray-500">TAURI</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="flex flex-1 min-h-0 overflow-hidden">
+        <section id="pos-view" class="flex flex-1 min-w-0 overflow-hidden">
+        <!-- LEFT COLUMN: Products -->
+        <div class="flex-1 flex flex-col bg-gray-50 border-r border-gray-200">
+          <!-- Search & Filter Bar -->
+          <div class="bg-white border-b border-gray-200 p-4 space-y-3">
+            <!-- Search -->
+            <div class="flex gap-2">
+              <input type="text" id="search-input" placeholder="Cari produk / pindai barcode (Tekan Enter)..." 
+                class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm font-medium hover:bg-gray-300">Pindai Kamera</button>
+              <span class="px-3 py-2 bg-green-100 text-green-700 rounded text-xs font-medium">USB Scanner Ready</span>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex gap-2 overflow-x-auto pb-2">
+              <button class="category-btn active px-3 py-1 bg-green-500 text-white rounded-full text-xs font-medium whitespace-nowrap" data-category="all">Semua</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Minuman">Minuman</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Sembako">Sembako</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Makanan">Makanan</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Lainnya">Lainnya</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Obat-obatan">Obat-obatan</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Mie Instan">Mie Instan</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Bumbu">Bumbu</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Snack">Snack</button>
+              <button class="category-btn px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium whitespace-nowrap" data-category="Kesehatan & Kebersihan">Kesehatan & Kebersihan</button>
+            </div>
+
+            <!-- Sort -->
+            <div class="flex justify-end items-center">
+              <select class="border border-gray-300 rounded px-2 py-1 text-xs">
+                <option>Terlaris</option>
+                <option>Harga Rendah</option>
+                <option>Harga Tinggi</option>
+              </select>
             </div>
           </div>
 
           <!-- Products Grid -->
-          <div id="products-grid" class="grid grid-cols-3 gap-4">
-            <!-- Products akan dimuat di sini -->
-            <div class="col-span-3 text-center text-gray-500 py-8">Loading produk...</div>
+          <div class="flex-1 overflow-y-auto p-4">
+            <div id="products-grid" class="grid grid-cols-4 gap-3">
+              <div class="col-span-4 text-center text-gray-500 py-8">Loading produk...</div>
+            </div>
           </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Cart & Payment -->
+        <div class="w-96 bg-white border-l border-gray-200 flex flex-col shadow-lg">
+          <!-- Cart Header -->
+          <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-900">Keranjang Pesanan</h2>
+              <span id="cart-count" class="px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold">0</span>
+            </div>
+          </div>
+
+          <!-- Cart Items -->
+          <div id="cart-items" class="flex-1 overflow-y-auto p-3 space-y-2">
+            <div class="text-center text-gray-400 py-12">
+              <div class="text-4xl mb-2">🛍️</div>
+              <div class="text-sm">Keranjang masih kosong</div>
+              <div class="text-xs text-gray-300">Klik produk di atas untuk menambahkan</div>
+            </div>
+          </div>
+
+          <!-- Cart Summary -->
+          <div class="border-t border-gray-200 p-4 bg-gray-50 space-y-3">
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-gray-600">Subtotal:</span>
+                <span class="text-sm font-medium" id="subtotal">Rp 0</span>
+              </div>
+              <div class="flex justify-between mb-2">
+                <span class="text-sm text-gray-600">Diskon:</span>
+                <div class="flex gap-1">
+                  <input type="number" placeholder="%" class="w-12 border border-gray-300 rounded px-2 py-1 text-xs" />
+                  <button class="px-2 py-1 bg-orange-500 text-white rounded text-xs font-medium">+ Tambah</button>
+                </div>
+              </div>
+              <div class="border-t border-gray-300 pt-2 flex justify-between">
+                <span class="font-bold text-gray-900">Total:</span>
+                <span class="text-lg font-bold text-green-600" id="total">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-gray-600">Metode Pembayaran:</label>
+              <div class="flex gap-2">
+                <button class="flex-1 px-3 py-2 bg-green-500 text-white rounded text-xs font-medium">Tunai</button>
+                <button class="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded text-xs font-medium hover:bg-gray-300">QRIS</button>
+                <button class="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded text-xs font-medium hover:bg-gray-300">Transfer</button>
+              </div>
+              <div class="text-center text-xs font-medium text-green-600">Lunas</div>
+            </div>
+
+            <!-- Payment Input -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-gray-600">Uang Diterima:</label>
+              <input id="payment-amount" type="number" placeholder="Masukkan jumlah uang" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+              <div class="grid grid-cols-2 gap-2">
+                <button class="quick-pay px-2 py-2 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200" data-amount="0">Uang Pas</button>
+                <button class="quick-pay px-2 py-2 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200" data-amount="20000">Rp 20K</button>
+                <button class="quick-pay px-2 py-2 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200" data-amount="50000">Rp 50K</button>
+                <button class="quick-pay px-2 py-2 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200" data-amount="100000">Rp 100K</button>
+              </div>
+            </div>
+
+            <!-- Change -->
+            <div class="bg-gray-700 text-white p-3 rounded text-center">
+              <div class="text-xs text-gray-300 mb-1">Kembalian</div>
+              <div class="text-xl font-bold" id="change">Rp 0</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2">
+              <button id="pay-print-btn" class="w-full bg-green-500 text-white py-3 rounded font-bold hover:bg-green-600 transition text-sm">
+                ✓ Bayar & Cetak Struk 58mm
+              </button>
+              <button id="clear-cart-btn" class="w-full bg-red-500 text-white py-2 rounded font-medium hover:bg-red-600 transition text-sm">
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+        </section>
+
+        <section id="inventory-view" class="hidden flex-1 min-w-0 overflow-y-auto bg-gray-50 p-4 md:p-6">
+          <div class="mx-auto max-w-6xl">
+            <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-green-700">Inventaris</p>
+                <h1 class="mt-1 text-2xl font-bold text-gray-900">Produk & Stok</h1>
+                <p class="mt-1 text-sm text-gray-500">Kelola katalog dan jumlah stok produk.</p>
+              </div>
+              <button onclick="openProductModal()" class="rounded bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">+ Tambah Produk</button>
+            </div>
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div class="text-sm text-gray-600"><span id="inventory-count" class="font-semibold text-gray-900">0</span> produk</div>
+              <input id="inventory-search" type="search" placeholder="Cari nama, kode, atau kategori..." class="w-full max-w-sm rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+            </div>
+            <div class="overflow-x-auto rounded border border-gray-200 bg-white">
+              <table class="w-full min-w-[720px] text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-100 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th class="px-4 py-3 font-semibold">Produk</th>
+                    <th class="px-4 py-3 font-semibold">Kategori</th>
+                    <th class="px-4 py-3 text-right font-semibold">Harga</th>
+                    <th class="px-4 py-3 text-center font-semibold">Stok</th>
+                    <th class="px-4 py-3 text-right font-semibold">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-list" class="divide-y divide-gray-100"></tbody>
+              </table>
+              <div id="inventory-empty" class="hidden px-4 py-12 text-center text-sm text-gray-500">Produk tidak ditemukan.</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings-view" class="hidden flex-1 min-w-0 overflow-y-auto bg-gray-50 p-4 md:p-6">
+          <div class="mx-auto max-w-3xl">
+            <div class="mb-5">
+              <p class="text-xs font-semibold uppercase tracking-wide text-green-700">Konfigurasi</p>
+              <h1 class="mt-1 text-2xl font-bold text-gray-900">Pengaturan Toko</h1>
+              <p class="mt-1 text-sm text-gray-500">Informasi ini digunakan pada header struk 58mm.</p>
+            </div>
+            <form id="store-settings-form" class="space-y-4 rounded border border-gray-200 bg-white p-5">
+              <div>
+                <label for="store-name" class="mb-1 block text-sm font-medium text-gray-700">Nama Toko</label>
+                <input id="store-name" name="store_name" required class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label for="store-address" class="mb-1 block text-sm font-medium text-gray-700">Alamat</label>
+                <textarea id="store-address" name="address" rows="2" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+              </div>
+              <div>
+                <label for="store-phone" class="mb-1 block text-sm font-medium text-gray-700">No. Telp</label>
+                <input id="store-phone" name="phone" type="tel" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label for="store-cashier" class="mb-1 block text-sm font-medium text-gray-700">Kasir yang Bertugas (default)</label>
+                <input id="store-cashier" name="cashier_name" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label for="receipt-footer" class="mb-1 block text-sm font-medium text-gray-700">Catatan Kaki Struk</label>
+                <textarea id="receipt-footer" name="receipt_footer" rows="2" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+              </div>
+              <div class="flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+                <p id="settings-status" class="text-sm text-gray-500" aria-live="polite"></p>
+                <button id="save-settings-btn" type="submit" class="rounded bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700">Simpan Pengaturan</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/45 p-2 sm:p-4">
+      <div class="flex max-h-[96vh] w-full max-w-[28rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><span class="text-emerald-500">⬡</span>Tambah Produk Baru</h2>
+          <button type="button" onclick="closeProductModal()" aria-label="Tutup" class="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800">✕</button>
+        </div>
+        <form id="add-product-form" class="flex min-h-0 flex-1 flex-col" onsubmit="event.preventDefault(); submitAddProduct();">
+          <div class="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2">
+            <div>
+              <label for="product-name" class="mb-1 block text-xs font-medium text-slate-500">Nama Produk</label>
+              <input id="product-name" type="text" placeholder="Contoh: Kopi Susu Gula Aren" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 outline-none placeholder:font-semibold placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required />
+            </div>
+            <div>
+              <label for="product-code" class="mb-1 block text-xs font-medium text-slate-500">SKU / Kode</label>
+              <input id="product-code" type="text" readonly class="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs text-slate-800" />
+            </div>
+            <div>
+              <div class="mb-1 flex items-center justify-between">
+                <label for="product-category" class="block text-xs font-medium text-slate-500">Kategori</label>
+                <button id="toggle-custom-category" type="button" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">+ Ketik Baru</button>
+              </div>
+              <select id="product-category" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required>
+                <option value="Minuman">Minuman</option>
+                <option value="Sembako">Sembako</option>
+                <option value="Makanan" selected>Makanan</option>
+                <option value="Lainnya">Lainnya</option>
+                <option value="Obat-obatan">Obat-obatan</option>
+                <option value="Mie Instan">Mie Instan</option>
+                <option value="Bumbu">Bumbu</option>
+                <option value="Snack">Snack</option>
+                <option value="Kesehatan & Kebersihan">Kesehatan & Kebersihan</option>
+              </select>
+              <input id="product-custom-category" type="text" placeholder="Nama kategori baru" class="mt-2 hidden w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" />
+            </div>
+            <div>
+              <label id="product-price-label" for="product-price" class="mb-1 block text-xs font-medium text-slate-500">Harga Jual (Rp)</label>
+              <input id="product-price" type="number" min="1" placeholder="18000" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required />
+            </div>
+            <div>
+              <label id="product-stock-label" for="product-stock" class="mb-1 block text-xs font-medium text-slate-500">Jumlah Stok</label>
+              <input id="product-stock" type="number" min="0" step="1" placeholder="50" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-mono text-sm text-slate-800 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required />
+              <p id="product-stock-help" class="mt-1 hidden text-[10px] text-slate-400"></p>
+            </div>
+            <div>
+              <label for="product-min-stock" class="mb-1 block text-xs font-medium text-slate-500">Stok Minimum (Alert)</label>
+              <input id="product-min-stock" type="number" min="0" step="1" value="5" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-mono text-sm text-slate-800 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" />
+              <p class="mt-1 text-[10px] text-slate-400">Notifikasi saat stok ≤ nilai ini</p>
+            </div>
+
+            <section class="rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <h3 class="text-xs font-bold text-slate-800">Metode Input Modal / Harga Beli</h3>
+                <div class="flex rounded-xl bg-slate-100 p-0.5" role="group" aria-label="Metode input modal">
+                  <button type="button" class="input-method-btn rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-500" data-method="retail">Eceran</button>
+                  <button type="button" class="input-method-btn rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-500" data-method="wholesale_box">Grosir/Dus</button>
+                  <button type="button" class="input-method-btn rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-500" data-method="rice_kg_liter">Konversi Kg → L</button>
+                </div>
+                <select id="product-input-method" class="hidden" aria-hidden="true" tabindex="-1">
+                  <option value="retail">Eceran</option>
+                  <option value="wholesale_box">Grosir / Dus</option>
+                  <option value="rice_kg_liter">Konversi Kg-Liter untuk Beras</option>
+                </select>
+              </div>
+              <label id="product-cost-label" for="product-cost-price" class="mb-1 block text-xs font-medium text-slate-500">Harga Beli per Eceran (Rp)</label>
+              <input id="product-cost-price" type="number" min="0" step="0.01" placeholder="600000" class="mb-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-800 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required />
+              <div id="wholesale-stock-fields" class="hidden space-y-3">
+                <div>
+                  <label for="product-units-per-package" class="mb-1 block text-xs font-medium text-slate-500">Isi per Dus (unit)</label>
+                  <input id="product-units-per-package" type="number" min="1" step="1" placeholder="24" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 font-mono text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" />
+                </div>
+                <p id="wholesale-modal-preview" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800" aria-live="polite">Modal per unit: Rp 0</p>
+              </div>
+              <div id="rice-stock-fields" class="hidden space-y-1">
+                <div>
+                  <label for="product-rice-bag-weight" class="mb-1 block text-xs font-medium text-slate-500">Berat Karung (Kg)</label>
+                  <input id="product-rice-bag-weight" type="number" min="0.01" step="0.01" placeholder="25" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 font-mono text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" />
+                </div>
+                <label class="block text-[10px] font-medium text-slate-500">Faktor Konversi (Liter/Kg)
+                  <input type="number" value="1.25" readonly class="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-700" />
+                </label>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-slate-700">
+                  <div class="flex justify-between gap-3"><span>Stok Awal Konversi:</span><strong id="rice-stock-preview" class="text-emerald-700">0 Liter</strong></div>
+                  <div class="mt-1 flex justify-between gap-3 border-t border-emerald-200 pt-1"><span>Modal per Liter:</span><strong id="rice-modal-preview" class="text-emerald-700">Rp 0 / Liter</strong></div>
+                </div>
+              </div>
+            </section>
+
+            <div>
+              <label for="product-barcode" class="mb-1 block text-xs font-medium text-slate-500">▥ Kode Barcode Produk</label>
+              <div class="flex gap-2">
+                <input id="product-barcode" type="text" inputmode="numeric" placeholder="Pindai dengan alat fisik" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" />
+                <button id="scan-product-barcode" type="button" class="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">◎ Scan Kamera</button>
+                <button id="scan-product-barcode-device" type="button" class="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">Scan USB</button>
+              </div>
+              <p class="mt-1 text-[10px] text-slate-500">💡 Arahkan pemindai USB/Bluetooth ke kolom di atas atau klik “Scan Kamera”.</p>
+              <div id="barcode-camera-panel" class="mt-2 hidden overflow-hidden rounded-xl border border-slate-200 bg-slate-950">
+                <video id="barcode-camera-video" class="max-h-48 w-full object-contain" autoplay muted playsinline></video>
+                <div class="flex items-center justify-between gap-3 p-2 text-xs text-white">
+                  <span id="barcode-camera-status" aria-live="polite">Arahkan barcode ke kamera.</span>
+                  <button id="stop-barcode-camera" type="button" class="rounded-lg bg-slate-700 px-2 py-1 hover:bg-slate-600">Tutup</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p class="mb-2 text-xs font-medium text-slate-500">Warna Label</p>
+              <div id="product-label-colors" class="flex flex-wrap gap-2" role="group" aria-label="Warna label produk">
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-emerald-500 ring-2 ring-emerald-500 ring-offset-2" data-color="#10b981" aria-label="Hijau" aria-pressed="true"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-teal-500" data-color="#14b8a6" aria-label="Teal" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-blue-500" data-color="#3b82f6" aria-label="Biru" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-violet-400" data-color="#a78bfa" aria-label="Ungu" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-pink-400" data-color="#f472b6" aria-label="Merah muda" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-red-400" data-color="#f87171" aria-label="Merah" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-amber-400" data-color="#fbbf24" aria-label="Kuning" aria-pressed="false"></button>
+                <button type="button" class="label-color h-7 w-7 rounded-full bg-slate-400" data-color="#94a3b8" aria-label="Abu-abu" aria-pressed="false"></button>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-3 py-3">
+            <button type="button" onclick="closeProductModal()" class="rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Batal</button>
+            <button type="submit" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-600">Simpan Produk</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Product List Modal -->
+    <div id="product-list-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+      <div class="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-900">Daftar Produk & Stok</h2>
+          <button onclick="closeProductListModal()" aria-label="Tutup" class="text-2xl text-slate-500">×</button>
+        </div>
+        <div id="product-list" class="space-y-2"></div>
+        <div class="mt-6 space-y-2">
+          <button onclick="testPrinter()" class="w-full rounded-lg bg-slate-800 py-3 font-bold text-white hover:bg-slate-700">Test Cetak Struk 58mm</button>
+          <button onclick="closeProductListModal()" class="w-full rounded-lg bg-slate-100 py-2 text-slate-700">Tutup</button>
         </div>
       </div>
+    </div>
 
-      <!-- Sidebar Cart -->
-      <div class="w-80 bg-white border-l border-gray-200 flex flex-col shadow-lg">
-        <!-- Cart Header -->
-        <div class="p-4 border-b border-gray-200">
-          <h2 class="text-lg font-bold text-gray-800">Keranjang</h2>
-        </div>
-
-        <!-- Cart Items -->
-        <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
-          <!-- Cart items akan ditampilkan di sini -->
-          <div class="text-center text-gray-400 text-sm py-8">Keranjang kosong</div>
-        </div>
-
-        <!-- Cart Summary -->
-        <div class="p-4 border-t border-gray-200 bg-gray-50">
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Subtotal:</span>
-              <span class="font-medium" id="subtotal">Rp 0</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Pajak (0%):</span>
-              <span class="font-medium" id="tax">Rp 0</span>
-            </div>
-            <div class="flex justify-between text-lg font-bold border-t pt-2">
-              <span>Total:</span>
-              <span id="total">Rp 0</span>
-            </div>
+    <div id="auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/60 p-4">
+      <section class="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
+        <p id="auth-eyebrow" class="text-xs font-semibold uppercase tracking-wide text-green-700">Sesi Kasir</p>
+        <h2 id="auth-title" class="mt-1 text-2xl font-bold text-gray-900">Login Kasir</h2>
+        <p id="auth-description" class="mt-1 text-sm text-gray-500"></p>
+        <form id="auth-form" class="mt-5 space-y-4">
+          <div id="auth-name-wrap" class="hidden">
+            <label for="auth-name" class="mb-1 block text-sm font-medium text-gray-700">Nama Kasir</label>
+            <input id="auth-name" autocomplete="name" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
           </div>
-
-          <!-- Payment Method -->
-          <div class="mb-4">
-            <label class="text-sm text-gray-600 block mb-2">Metode Pembayaran:</label>
-            <select id="payment-method" class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-              <option value="cash">Tunai</option>
-              <option value="card">Kartu</option>
-              <option value="transfer">Transfer</option>
-            </select>
+          <div>
+            <label for="auth-username" class="mb-1 block text-sm font-medium text-gray-700">Username</label>
+            <input id="auth-username" autocomplete="username" required class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
           </div>
-
-          <!-- Quick Payment Buttons -->
-          <div class="grid grid-cols-2 gap-2 mb-4">
-            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="50000">
-              Rp 50K
-            </button>
-            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="100000">
-              Rp 100K
-            </button>
-            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="200000">
-              Rp 200K
-            </button>
-            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="500000">
-              Rp 500K
-            </button>
+          <div>
+            <label for="auth-password" class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+            <input id="auth-password" type="password" autocomplete="current-password" required minlength="8" class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
           </div>
-
-          <!-- Payment Input -->
-          <input id="payment-amount" type="number" placeholder="Jumlah pembayaran" class="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4" />
-
-          <!-- Action Buttons -->
-          <div class="space-y-2">
-            <button id="pay-print-btn" class="w-full bg-green-500 text-white py-3 rounded font-bold hover:bg-green-600 transition">
-              Bayar & Cetak Struk 58mm
-            </button>
-            <button id="clear-cart-btn" class="w-full bg-red-500 text-white py-2 rounded font-medium hover:bg-red-600 transition">
-              Batal
-            </button>
-          </div>
-        </div>
-      </div>
+          <p id="auth-error" class="hidden text-sm text-red-600" role="alert"></p>
+          <button id="auth-submit" type="submit" class="w-full rounded bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700"></button>
+        </form>
+      </section>
     </div>
   </body>
 </html>

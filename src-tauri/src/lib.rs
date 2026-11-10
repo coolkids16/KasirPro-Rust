@@ -18,6 +18,11 @@ pub fn run() {
         printer::print_receipt_command,
         db::test_db_connection,
         db::get_products,
+        db::add_product,
+        db::adjust_product_stock,
+        db::delete_product,
+        db::get_store_settings,
+        db::save_store_settings,
         db::create_transaction
     ])
     .run(tauri::generate_context!())

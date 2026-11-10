@@ -14,6 +14,8 @@ pub struct ReceiptData {
     pub store_name: String,
     pub store_address: String,
     pub store_phone: String,
+    #[serde(default)]
+    pub receipt_footer: String,
     pub transaction_id: String,
     pub cashier_name: String,
     pub items: Vec<CartItem>,
@@ -134,7 +136,13 @@ fn generate_esc_pos(data: &ReceiptData) -> Vec<u8> {
     // Thank you - center
     output.extend_from_slice(&[0x1B, 0x61, 0x01]); // Center
     output.extend_from_slice(&[0x1D, 0x21, 0x01]); // 1x width, 2x height
-    output.extend_from_slice(b"Terima Kasih\n");
+    let footer = if data.receipt_footer.trim().is_empty() {
+        "Terima Kasih"
+    } else {
+        data.receipt_footer.trim()
+    };
+    output.extend_from_slice(footer.as_bytes());
+    output.extend_from_slice(b"\n");
     output.extend_from_slice(&[0x1D, 0x21, 0x00]); // Normal
     output.extend_from_slice(b"Selamat Datang Kembali\n");
     output.extend_from_slice(b"\n\n\n");
