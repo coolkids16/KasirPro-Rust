@@ -1,43 +1,121 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="/src/styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
+    <title>KasirPro - 58mm POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="/src/main.ts" defer></script>
   </head>
 
-  <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
+  <body class="bg-gray-50">
+    <div class="flex h-screen bg-gray-50">
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-200 p-4 shadow-sm">
+          <h1 class="text-2xl font-bold text-gray-800">KasirPro 58mm</h1>
+          <p class="text-sm text-gray-500">Sistem Kasir Thermal Printer</p>
+        </div>
 
-      <div class="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/src/assets/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img
-            src="/src/assets/tauri.svg"
-            class="logo tauri"
-            alt="Tauri logo"
-          />
-        </a>
-        <a href="https://www.typescriptlang.org/docs" target="_blank">
-          <img
-            src="/src/assets/typescript.svg"
-            class="logo typescript"
-            alt="typescript logo"
-          />
-        </a>
+        <!-- Products & Categories -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <!-- Categories -->
+          <div class="mb-6">
+            <div class="flex gap-2 overflow-x-auto pb-4">
+              <button class="category-btn active px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-medium whitespace-nowrap" data-category="all">
+                Semua
+              </button>
+              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Minuman">
+                Minuman
+              </button>
+              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Makanan">
+                Makanan
+              </button>
+              <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium whitespace-nowrap" data-category="Snack">
+                Snack
+              </button>
+            </div>
+          </div>
+
+          <!-- Products Grid -->
+          <div id="products-grid" class="grid grid-cols-3 gap-4">
+            <!-- Products akan dimuat di sini -->
+            <div class="col-span-3 text-center text-gray-500 py-8">Loading produk...</div>
+          </div>
+        </div>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
-    </main>
+      <!-- Sidebar Cart -->
+      <div class="w-80 bg-white border-l border-gray-200 flex flex-col shadow-lg">
+        <!-- Cart Header -->
+        <div class="p-4 border-b border-gray-200">
+          <h2 class="text-lg font-bold text-gray-800">Keranjang</h2>
+        </div>
+
+        <!-- Cart Items -->
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
+          <!-- Cart items akan ditampilkan di sini -->
+          <div class="text-center text-gray-400 text-sm py-8">Keranjang kosong</div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="p-4 border-t border-gray-200 bg-gray-50">
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Subtotal:</span>
+              <span class="font-medium" id="subtotal">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Pajak (0%):</span>
+              <span class="font-medium" id="tax">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-lg font-bold border-t pt-2">
+              <span>Total:</span>
+              <span id="total">Rp 0</span>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="mb-4">
+            <label class="text-sm text-gray-600 block mb-2">Metode Pembayaran:</label>
+            <select id="payment-method" class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+              <option value="cash">Tunai</option>
+              <option value="card">Kartu</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+
+          <!-- Quick Payment Buttons -->
+          <div class="grid grid-cols-2 gap-2 mb-4">
+            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="50000">
+              Rp 50K
+            </button>
+            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="100000">
+              Rp 100K
+            </button>
+            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="200000">
+              Rp 200K
+            </button>
+            <button class="quick-pay bg-gray-200 text-gray-700 py-2 rounded text-sm font-medium hover:bg-gray-300" data-amount="500000">
+              Rp 500K
+            </button>
+          </div>
+
+          <!-- Payment Input -->
+          <input id="payment-amount" type="number" placeholder="Jumlah pembayaran" class="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4" />
+
+          <!-- Action Buttons -->
+          <div class="space-y-2">
+            <button id="pay-print-btn" class="w-full bg-green-500 text-white py-3 rounded font-bold hover:bg-green-600 transition">
+              Bayar & Cetak Struk 58mm
+            </button>
+            <button id="clear-cart-btn" class="w-full bg-red-500 text-white py-2 rounded font-medium hover:bg-red-600 transition">
+              Batal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

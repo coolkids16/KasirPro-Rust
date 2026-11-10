@@ -1,14 +1,25 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+// src-tauri/src/lib.rs
+
+mod printer;
+mod db;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    .setup(|_app| {
+        tauri::async_runtime::spawn(async {
+            if let Err(e) = db::connect_to_stb_db().await {
+                eprintln!("Gagal terhubung ke database STB: {}", e);
+            }
+        });
+        Ok(())
+    })
+    .invoke_handler(tauri::generate_handler![
+        printer::print_receipt_command,
+        db::test_db_connection,
+        db::get_products,
+        db::create_transaction
+    ])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
 }
