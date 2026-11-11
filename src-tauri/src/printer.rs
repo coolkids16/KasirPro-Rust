@@ -1,6 +1,8 @@
 // src-tauri/src/printer.rs
 
 use serde::{Deserialize, Serialize};
+use base64::Engine;
+use std::io::Cursor;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CartItem {
@@ -14,6 +16,8 @@ pub struct ReceiptData {
     pub store_name: String,
     pub store_address: String,
     pub store_phone: String,
+    #[serde(default)]
+    pub logo_data_url: String,
     #[serde(default)]
     pub receipt_footer: String,
     pub transaction_id: String,
@@ -63,6 +67,11 @@ fn generate_esc_pos(data: &ReceiptData) -> Vec<u8> {
     
     // Center alignment
     output.extend_from_slice(&[0x1B, 0x61, 0x01]); // ESC a 1 - Center
+
+    if let Some(bitmap) = logo_raster(&data.logo_data_url) {
+        output.extend_from_slice(&bitmap);
+        output.extend_from_slice(b"\n");
+    }
     
     // Store name - double size
     output.extend_from_slice(&[0x1D, 0x21, 0x11]); // GS ! n - 2x width & height
@@ -151,6 +160,53 @@ fn generate_esc_pos(data: &ReceiptData) -> Vec<u8> {
     output.extend_from_slice(&[0x1D, 0x56, 0x01]); // GS V 1 - Partial cut
     
     output
+}
+
+fn logo_raster(data_url: &str) -> Option<Vec<u8>> {
+    let encoded = data_url.strip_prefix("data:image/png;base64,")?;
+    let png_bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    let decoder = png::Decoder::new(Cursor::new(png_bytes));
+    let mut reader = decoder.read_info().ok()?;
+    let mut source = vec![0; reader.output_buffer_size()?];
+    let info = reader.next_frame(&mut source).ok()?;
+    let source = &source[..info.buffer_size()];
+    let channels = match info.color_type {
+        png::ColorType::Grayscale => 1,
+        png::ColorType::GrayscaleAlpha => 2,
+        png::ColorType::Rgb => 3,
+        png::ColorType::Rgba => 4,
+        _ => return None,
+    };
+
+    let max_width = 384usize;
+    let scale = (info.width as usize).max(max_width) as f64 / max_width as f64;
+    let width = ((info.width as f64 / scale).round() as usize).clamp(1, max_width);
+    let height = ((info.height as f64 / scale).round() as usize).max(1);
+    let bytes_per_row = (width + 7) / 8;
+    let mut pixels = vec![0u8; bytes_per_row * height];
+
+    for y in 0..height {
+        let source_y = ((y as f64 * scale).floor() as usize).min(info.height as usize - 1);
+        for x in 0..width {
+            let source_x = ((x as f64 * scale).floor() as usize).min(info.width as usize - 1);
+            let offset = (source_y * info.width as usize + source_x) * channels;
+            let (red, green, blue, alpha) = match info.color_type {
+                png::ColorType::Grayscale => (source[offset], source[offset], source[offset], 255),
+                png::ColorType::GrayscaleAlpha => (source[offset], source[offset], source[offset], source[offset + 1]),
+                png::ColorType::Rgb => (source[offset], source[offset + 1], source[offset + 2], 255),
+                png::ColorType::Rgba => (source[offset], source[offset + 1], source[offset + 2], source[offset + 3]),
+                _ => return None,
+            };
+            let luminance = (u16::from(red) * 299 + u16::from(green) * 587 + u16::from(blue) * 114) / 1000;
+            if alpha > 16 && luminance < 160 {
+                pixels[y * bytes_per_row + x / 8] |= 0x80 >> (x % 8);
+            }
+        }
+    }
+
+    let mut command = vec![0x1D, 0x76, 0x30, 0x00, (bytes_per_row & 0xFF) as u8, (bytes_per_row >> 8) as u8, (height & 0xFF) as u8, (height >> 8) as u8];
+    command.extend_from_slice(&pixels);
+    Some(command)
 }
 
 fn truncate(s: &str, max_len: usize) -> String {

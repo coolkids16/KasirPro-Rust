@@ -2404,7 +2404,11 @@ dependencies = [
 name = "kasirpro-rust"
 version = "0.1.0"
 dependencies = [
+ "argon2",
+ "base64 0.22.1",
  "chrono",
+ "png",
+ "rand 0.8.8",
  "reqwest 0.11.27",
  "serde",
  "serde_json",
@@ -2412,6 +2416,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

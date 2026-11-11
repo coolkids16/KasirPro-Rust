@@ -26,6 +26,11 @@ tokio = { version = "1.0", features = ["full"] }
 surrealdb = { version = "4.0.1", features = ["protocol-ws"] }
 reqwest = { version = "0.11", features = ["json"] }
 chrono = "0.4"
+argon2 = "0.5"
+rand = "0.8"
+uuid = { version = "1", features = ["v4", "serde"] }
+base64 = "0.22"
+png = "0.18"
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]
